@@ -34,13 +34,11 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "shrinkr",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Shrink files clipped from Medium.",
+	Long: `Files clipped from Medium may contain massive appendices 
+referencing other articles. As a consequence the file sizes of such clippings
+can get a multiple of the article size itself.
+Shrinkr tries to detect the appendix of a clipping and to remove it.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

@@ -30,13 +30,11 @@ import (
 // shrinkCmd represents the shrink command
 var shrinkCmd = &cobra.Command{
 	Use:   "shrink",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Looks for a block of text below the article and removes it.",
+	Long: `The command checks for the existence of text below the article and removes it. 
+In many cases references to other articles and other kind of overhead can be found here. 
+These artifacts may consume much more memory and disk space than the article.  
+Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("shrink called")
 	},

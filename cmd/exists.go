@@ -22,24 +22,75 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/net/html"
 )
 
 // existsCmd represents the exists command
 var existsCmd = &cobra.Command{
 	Use:   "exists",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Looks for an element of type article in a given document.",
+	Long: `The command checks for the existence of an element of type article in a given HTML document.
+It can be run on documents to decide whether shrinking them may work.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("exists called")
+		if len(args) != 1 {
+			fmt.Println("filename missing")
+			os.Exit(1)
+		}
+		filename := args[0]
+		fmt.Println("exists called for " + filename)
+		file, err := os.Open(filename)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				// File does not exist
+				fmt.Println("file does not exist: " + filename)
+				os.Exit(2)
+			} else {
+				panic(err)
+			}
+		}
+		defer func() { _ = file.Close() }()
+
+		// TODO
+		doc, err := html.Parse(file)
+		if err != nil {
+			fmt.Println("Error parsing document:", err)
+			os.Exit(3)
+		}
+		result := hasArticleElement(doc)
+		fmt.Printf("Document has Article element: %v\n", result)
 	},
+}
+
+func hasArticleElement(rootNode *html.Node) bool {
+	body := lookupBody(rootNode)
+	var lookupArticle func(*html.Node) bool
+	lookupArticle = func(n *html.Node) bool {
+		if n.Type == html.ElementNode && n.Data == "article" {
+			// fmt.Printf("%+v\n", n)
+			return true
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if lookupArticle(c) {
+				return true
+			}
+		}
+		return false
+	}
+	return lookupArticle(body)
+}
+
+func lookupBody(root *html.Node) *html.Node {
+	html_ := root.FirstChild
+	body := html_.FirstChild.NextSibling
+	if body.Data != "body" {
+		panic("node body not found")
+	}
+	return body
 }
 
 func init() {
