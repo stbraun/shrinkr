@@ -22,11 +22,11 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/stbraun/shrinkr/util"
 	"golang.org/x/net/html"
 )
 
@@ -39,30 +39,26 @@ It can be run on documents to decide whether shrinking them may work.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("filename missing")
-			os.Exit(1)
+			os.Exit(-1)
 		}
 		filename := args[0]
 		fmt.Println("exists called for " + filename)
-		file, err := os.Open(filename)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				// File does not exist
-				fmt.Println("file does not exist: " + filename)
-				os.Exit(2)
-			} else {
-				panic(err)
-			}
-		}
+		file := util.OpenFile(filename)
 		defer func() { _ = file.Close() }()
 
-		// TODO
 		doc, err := html.Parse(file)
 		if err != nil {
 			fmt.Println("Error parsing document:", err)
-			os.Exit(3)
+			os.Exit(-1)
 		}
 		result := hasArticleElement(doc)
-		fmt.Printf("Document has Article element: %v\n", result)
+		if result {
+			fmt.Printf("Document contains an <article> element.")
+			os.Exit(0)
+		} else {
+			fmt.Printf("Document does not contain an <article> element.")
+			os.Exit(1)
+		}
 	},
 }
 
@@ -71,7 +67,6 @@ func hasArticleElement(rootNode *html.Node) bool {
 	var lookupArticle func(*html.Node) bool
 	lookupArticle = func(n *html.Node) bool {
 		if n.Type == html.ElementNode && n.Data == "article" {
-			// fmt.Printf("%+v\n", n)
 			return true
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
