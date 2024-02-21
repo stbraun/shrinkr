@@ -25,8 +25,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"golang.org/x/net/html"
 )
 
+// Open a file by given filename.
+// Exit or panic in case of error.
 func OpenFile(filename string) *os.File {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -39,4 +43,30 @@ func OpenFile(filename string) *os.File {
 		}
 	}
 	return file
+}
+
+// Parse a given file into a HTML tree.
+// Exit program in case of a parse error.
+func ParseHTML(file *os.File) *html.Node {
+	doc, err := html.Parse(file)
+	if err != nil {
+		fmt.Println("Error parsing document:", err)
+		os.Exit(-1)
+	}
+	return doc
+}
+
+// Search the given HTML tree for <body> and return it.
+// Panic if it is not found in the expected place.
+func LookupBody(root *html.Node) *html.Node {
+	r := root.FirstChild
+	if r.Data != "html" {
+		panic("<html> tag not found")
+	}
+	for n := r.FirstChild; n != nil; n = n.NextSibling {
+		if n.Data == "body" {
+			return n
+		}
+	}
+	panic("tag <body> not found")
 }

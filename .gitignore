@@ -1,3 +1,5 @@
 .tmuxinator.yaml
 /testdata/
+/testdata/
+.vscode
 

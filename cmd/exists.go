@@ -46,24 +46,20 @@ It can be run on documents to decide whether shrinking them may work.`,
 		file := util.OpenFile(filename)
 		defer func() { _ = file.Close() }()
 
-		doc, err := html.Parse(file)
-		if err != nil {
-			fmt.Println("Error parsing document:", err)
-			os.Exit(-1)
-		}
+		doc := util.ParseHTML(file)
 		result := hasArticleElement(doc)
 		if result {
-			fmt.Printf("Document contains an <article> element.")
+			fmt.Println("Document contains an <article> element.")
 			os.Exit(0)
 		} else {
-			fmt.Printf("Document does not contain an <article> element.")
+			fmt.Println("Document does not contain an <article> element.")
 			os.Exit(1)
 		}
 	},
 }
 
 func hasArticleElement(rootNode *html.Node) bool {
-	body := lookupBody(rootNode)
+	body := util.LookupBody(rootNode)
 	var lookupArticle func(*html.Node) bool
 	lookupArticle = func(n *html.Node) bool {
 		if n.Type == html.ElementNode && n.Data == "article" {
@@ -77,15 +73,6 @@ func hasArticleElement(rootNode *html.Node) bool {
 		return false
 	}
 	return lookupArticle(body)
-}
-
-func lookupBody(root *html.Node) *html.Node {
-	html_ := root.FirstChild
-	body := html_.FirstChild.NextSibling
-	if body.Data != "body" {
-		panic("node body not found")
-	}
-	return body
 }
 
 func init() {
