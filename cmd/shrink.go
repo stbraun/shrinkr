@@ -49,6 +49,10 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 		defer func() { _ = file.Close() }()
 
 		doc := util.ParseHTML(file)
+		if !util.HasArticleElement(doc) {
+			fmt.Println("No <article> element in ", filename)
+			os.Exit(-1)
+		}
 		articleFound := shrinkDocument(doc)
 		if !articleFound {
 			fmt.Fprintln(os.Stderr, "No <article> tag found.")

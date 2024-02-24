@@ -70,3 +70,22 @@ func LookupBody(root *html.Node) *html.Node {
 	}
 	panic("tag <body> not found")
 }
+
+// Looks for an <article> element in the HTML tree.
+// Returns tree if an element was found.
+func HasArticleElement(rootNode *html.Node) bool {
+	body := LookupBody(rootNode)
+	var lookupArticle func(*html.Node) bool
+	lookupArticle = func(n *html.Node) bool {
+		if n.Type == html.ElementNode && n.Data == "article" {
+			return true
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if lookupArticle(c) {
+				return true
+			}
+		}
+		return false
+	}
+	return lookupArticle(body)
+}

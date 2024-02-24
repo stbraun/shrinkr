@@ -27,7 +27,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stbraun/shrinkr/util"
-	"golang.org/x/net/html"
 )
 
 // existsCmd represents the exists command
@@ -47,7 +46,7 @@ It can be run on documents to decide whether shrinking them may work.`,
 		defer func() { _ = file.Close() }()
 
 		doc := util.ParseHTML(file)
-		result := hasArticleElement(doc)
+		result := util.HasArticleElement(doc)
 		if result {
 			fmt.Println("Document contains an <article> element.")
 			os.Exit(0)
@@ -56,23 +55,6 @@ It can be run on documents to decide whether shrinking them may work.`,
 			os.Exit(1)
 		}
 	},
-}
-
-func hasArticleElement(rootNode *html.Node) bool {
-	body := util.LookupBody(rootNode)
-	var lookupArticle func(*html.Node) bool
-	lookupArticle = func(n *html.Node) bool {
-		if n.Type == html.ElementNode && n.Data == "article" {
-			return true
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			if lookupArticle(c) {
-				return true
-			}
-		}
-		return false
-	}
-	return lookupArticle(body)
 }
 
 func init() {
