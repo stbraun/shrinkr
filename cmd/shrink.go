@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stbraun/shrinkr/util"
 	"golang.org/x/net/html"
 )
@@ -50,13 +51,10 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 
 		doc := util.ParseHTML(file)
 		if !util.HasArticleElement(doc) {
-			fmt.Println("No <article> element in ", filename)
+			fmt.Fprintln(os.Stderr, "No <article> element in ", filename)
 			os.Exit(-1)
 		}
-		articleFound := shrinkDocument(doc)
-		if !articleFound {
-			fmt.Fprintln(os.Stderr, "No <article> tag found.")
-		}
+		shrinkDocument(doc)
 		ofile, err := os.Create("./testdata/output.html")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -67,8 +65,9 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
 		}
-		fmt.Printf("%+v\n", doc)
-
+		if viper.GetBool("verbose") {
+			fmt.Printf("%+v\n", doc)
+		}
 	},
 }
 
@@ -93,8 +92,10 @@ func shrinkDocument(rootNode *html.Node) bool {
 		}
 		for _, r := range nodesToBeRemoved {
 			p := r.Parent
-			fmt.Printf("parent: %+v\n", p)
-			fmt.Printf("child: %+v\n", r)
+			if viper.GetBool("verbose") {
+				fmt.Printf("parent: %+v\n", p)
+				fmt.Printf("child: %+v\n", r)
+			}
 			if p != nil {
 				p.RemoveChild(r)
 			}

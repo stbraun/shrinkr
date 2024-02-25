@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stbraun/shrinkr/util"
 )
 
@@ -37,11 +38,13 @@ var existsCmd = &cobra.Command{
 It can be run on documents to decide whether shrinking them may work.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			fmt.Println("filename missing")
+			fmt.Fprintln(os.Stderr, "filename missing")
 			os.Exit(-1)
 		}
 		filename := args[0]
-		fmt.Println("exists called for " + filename)
+		if viper.GetBool("verbose") {
+			fmt.Println("exists called for " + filename)
+		}
 		file := util.OpenFile(filename)
 		defer func() { _ = file.Close() }()
 

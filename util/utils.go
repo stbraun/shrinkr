@@ -36,7 +36,7 @@ func OpenFile(filename string) *os.File {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			// File does not exist
-			fmt.Println("file does not exist: " + filename)
+			fmt.Fprintln(os.Stderr, "file does not exist: "+filename)
 			os.Exit(-1)
 		} else {
 			panic(err)
@@ -50,7 +50,7 @@ func OpenFile(filename string) *os.File {
 func ParseHTML(file *os.File) *html.Node {
 	doc, err := html.Parse(file)
 	if err != nil {
-		fmt.Println("Error parsing document:", err)
+		fmt.Fprintln(os.Stderr, "Error parsing document:", err)
 		os.Exit(-1)
 	}
 	return doc
