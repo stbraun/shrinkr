@@ -26,10 +26,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/stbraun/shrinkr/util"
 	"golang.org/x/net/html"
 )
+
+var outfilepath *string
 
 // shrinkCmd represents the shrink command
 var shrinkCmd = &cobra.Command{
@@ -55,7 +56,10 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			os.Exit(-1)
 		}
 		shrinkDocument(doc)
-		ofile, err := os.Create("./testdata/output.html")
+		if Verbose {
+			fmt.Println("Creating output file: ", *outfilepath)
+		}
+		ofile, err := os.Create(*outfilepath)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
@@ -64,9 +68,6 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
-		}
-		if viper.GetBool("verbose") {
-			fmt.Printf("%+v\n", doc)
 		}
 	},
 }
@@ -92,7 +93,7 @@ func shrinkDocument(rootNode *html.Node) bool {
 		}
 		for _, r := range nodesToBeRemoved {
 			p := r.Parent
-			if viper.GetBool("verbose") {
+			if Verbose {
 				fmt.Printf("parent: %+v\n", p)
 				fmt.Printf("child: %+v\n", r)
 			}
@@ -118,13 +119,5 @@ func listSiblings(n *html.Node) []*html.Node {
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// shrinkCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// shrinkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	outfilepath = shrinkCmd.PersistentFlags().String("output", "./output.html", "The path to the output file.")
 }
