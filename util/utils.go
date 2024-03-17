@@ -56,15 +56,27 @@ func ParseHTML(file *os.File) *html.Node {
 	return doc
 }
 
+// Search the given HTML tree for <head> and return it.
+// Panic if it is not found in the expected place.
+func LookupHead(root *html.Node) *html.Node {
+	return LookupTopLevel(root, "head")
+}
+
 // Search the given HTML tree for <body> and return it.
 // Panic if it is not found in the expected place.
 func LookupBody(root *html.Node) *html.Node {
+	return LookupTopLevel(root, "body")
+}
+
+// Search the given HTML tree for <node> and return it.
+// Panic if it is not found in the expected place.
+func LookupTopLevel(root *html.Node, node string) *html.Node {
 	r := root.FirstChild
 	if r.Data != "html" {
 		panic("<html> tag not found")
 	}
 	for n := r.FirstChild; n != nil; n = n.NextSibling {
-		if n.Data == "body" {
+		if n.Data == node {
 			return n
 		}
 	}
@@ -88,4 +100,30 @@ func HasArticleElement(rootNode *html.Node) bool {
 		return false
 	}
 	return lookupArticle(body)
+}
+
+// Looks for the <title> and returns it.
+// Panics if <title> not found.
+func LookupTitle(rootNode *html.Node) string {
+	head := LookupHead(rootNode)
+	for c := head.FirstChild; c != nil; c = c.NextSibling {
+		if c.Data == "title" {
+			title := c.FirstChild.Data
+			return title
+		}
+	}
+	panic("title tag not found")
+}
+
+// Determines the siblings of the given node.
+// Currently, only next siblings are considered.
+func ListSiblingsOfNode(n *html.Node) []*html.Node {
+	var l []*html.Node
+	s := n.NextSibling
+	for s != nil {
+		l = append(l, s)
+		s = s.NextSibling
+	}
+	// TODO add also previous siblings if any.
+	return l
 }

@@ -24,13 +24,17 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/stbraun/shrinkr/util"
 	"golang.org/x/net/html"
 )
 
-var outfilepath *string
+var (
+	outfileName *string
+	outfilePath *string
+)
 
 // shrinkCmd represents the shrink command
 var shrinkCmd = &cobra.Command{
@@ -41,6 +45,8 @@ In many cases references to other articles and other kind of overhead can be fou
 These artifacts may consume much more memory and disk space than the article.  
 Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var outFile string
+
 		if len(args) != 1 {
 			fmt.Println("filename missing")
 			os.Exit(-1)
@@ -55,11 +61,19 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			fmt.Fprintln(os.Stderr, "No <article> element in ", filename)
 			os.Exit(-1)
 		}
+		title := util.LookupTitle(doc)
+		fmt.Printf("Title: %+v\n", title)
 		shrinkDocument(doc)
-		if Verbose {
-			fmt.Println("Creating output file: ", *outfilepath)
+
+		if *outfileName != "" {
+			outFile = filepath.Join(*outfilePath, *outfileName)
+		} else {
+			outFile = filepath.Join(*outfilePath, title+".html")
 		}
-		ofile, err := os.Create(*outfilepath)
+		if Verbose {
+			fmt.Println("Creating output file: ", outFile)
+		}
+		ofile, err := os.Create(outFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
@@ -79,12 +93,12 @@ func shrinkDocument(rootNode *html.Node) bool {
 	var lookupArticle func(*html.Node) bool
 	lookupArticle = func(n *html.Node) bool {
 		if n.Type == html.ElementNode && n.Data == "article" {
-			nodesToBeRemoved = listSiblings(n)
+			nodesToBeRemoved = util.ListSiblingsOfNode(n)
 			return true
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if lookupArticle(c) {
-				nodesToBeRemoved = append(nodesToBeRemoved, listSiblings(c)...)
+				nodesToBeRemoved = append(nodesToBeRemoved, util.ListSiblingsOfNode(c)...)
 				result = true
 			} else {
 				r := c
@@ -106,18 +120,9 @@ func shrinkDocument(rootNode *html.Node) bool {
 	return lookupArticle(body)
 }
 
-func listSiblings(n *html.Node) []*html.Node {
-	var l []*html.Node
-	s := n.NextSibling
-	for s != nil {
-		l = append(l, s)
-		s = s.NextSibling
-	}
-	return l
-}
-
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
-	outfilepath = shrinkCmd.PersistentFlags().String("output", "./output.html", "The path to the output file.")
+	outfileName = shrinkCmd.PersistentFlags().String("output", "", "The name of the output file.")
+	outfilePath = shrinkCmd.PersistentFlags().String("outpath", "./", "The path where the output file shall be written.")
 }
