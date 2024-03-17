@@ -65,6 +65,13 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 		fmt.Printf("Title: %+v\n", title)
 		shrinkDocument(doc)
 
+		if _, err := os.Stat(*outfilePath); os.IsNotExist(err) {
+			err := os.Mkdir(*outfilePath, os.ModePerm)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		if *outfileName != "" {
 			outFile = filepath.Join(*outfilePath, *outfileName)
 		} else {
@@ -123,6 +130,6 @@ func shrinkDocument(rootNode *html.Node) bool {
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
-	outfileName = shrinkCmd.PersistentFlags().String("output", "", "The name of the output file.")
+	outfileName = shrinkCmd.PersistentFlags().String("outfile", "", "The name of the output file.")
 	outfilePath = shrinkCmd.PersistentFlags().String("outpath", "./", "The path where the output file shall be written.")
 }
