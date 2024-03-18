@@ -63,28 +63,19 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 		}
 		title := util.LookupTitle(doc)
 		fmt.Printf("Title: %+v\n", title)
-		shrinkDocument(doc)
 
-		if _, err := os.Stat(*outfilePath); os.IsNotExist(err) {
-			err := os.Mkdir(*outfilePath, os.ModePerm)
-			if err != nil {
-				panic(err)
-			}
-		}
-
-		if *outfileName != "" {
+		util.CreateDirIfNotExist(*outfilePath)
+		if len(*outfileName) > 0 {
 			outFile = filepath.Join(*outfilePath, *outfileName)
 		} else {
 			outFile = filepath.Join(*outfilePath, title+".html")
-		}
-		if Verbose {
-			fmt.Println("Creating output file: ", outFile)
 		}
 		ofile, err := os.Create(outFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(-1)
 		}
+		shrinkDocument(doc)
 		err = html.Render(ofile, doc)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -93,7 +84,7 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 	},
 }
 
-func shrinkDocument(rootNode *html.Node) bool {
+func shrinkDocument(rootNode *html.Node) {
 	body := util.LookupBody(rootNode)
 	var result bool = false
 	var nodesToBeRemoved []*html.Node
@@ -124,7 +115,7 @@ func shrinkDocument(rootNode *html.Node) bool {
 		}
 		return result
 	}
-	return lookupArticle(body)
+	lookupArticle(body)
 }
 
 func init() {

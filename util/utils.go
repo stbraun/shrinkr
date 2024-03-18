@@ -127,3 +127,14 @@ func ListSiblingsOfNode(n *html.Node) []*html.Node {
 	// TODO add also previous siblings if any.
 	return l
 }
+
+// Create the given directory if it does not exist.
+// Panic if creation fails.
+func CreateDirIfNotExist(path string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.Mkdir(path, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
