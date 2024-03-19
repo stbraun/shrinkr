@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stbraun/shrinkr/util"
+	"golang.org/x/net/html"
 )
 
 // existsCmd represents the exists command
@@ -39,7 +40,7 @@ It can be run on documents to decide whether shrinking them may work.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Fprintln(os.Stderr, "filename missing")
-			os.Exit(-1)
+			os.Exit(1)
 		}
 		filename := args[0]
 		if viper.GetBool("verbose") {
@@ -48,7 +49,11 @@ It can be run on documents to decide whether shrinking them may work.`,
 		file := util.OpenFile(filename)
 		defer func() { _ = file.Close() }()
 
-		doc := util.ParseHTML(file)
+		doc, err := html.Parse(file)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		result := util.HasArticleElement(doc)
 		if result {
 			fmt.Println("Document contains an <article> element.")

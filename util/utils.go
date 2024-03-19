@@ -37,23 +37,12 @@ func OpenFile(filename string) *os.File {
 		if errors.Is(err, os.ErrNotExist) {
 			// File does not exist
 			fmt.Fprintln(os.Stderr, "file does not exist: "+filename)
-			os.Exit(-1)
+			os.Exit(1)
 		} else {
 			panic(err)
 		}
 	}
 	return file
-}
-
-// Parse a given file into a HTML tree.
-// Exit program in case of a parse error.
-func ParseHTML(file *os.File) *html.Node {
-	doc, err := html.Parse(file)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error parsing document:", err)
-		os.Exit(-1)
-	}
-	return doc
 }
 
 // Search the given HTML tree for <head> and return it.

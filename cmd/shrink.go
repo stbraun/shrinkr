@@ -56,49 +56,61 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			for _, filename := range files {
 				processFile(filename)
 			}
-
 		} else {
 			if len(args) != 1 {
 				fmt.Println("filename missing")
-				os.Exit(-1)
+				os.Exit(1)
 			}
 			filename := args[0]
-			processFile(filename)
+			err := processFile(filename)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
 	},
 }
 
-func processFile(filename string) {
-	var outFile string
+func processFile(filename string) error {
 	fmt.Printf("shrinking %s...\n", filename)
 	file := util.OpenFile(filename)
 	defer func() { _ = file.Close() }()
 
-	doc := util.ParseHTML(file)
+	doc, err := html.Parse(file)
+	if err != nil {
+		return err
+	}
 	if !util.HasArticleElement(doc) {
-		fmt.Fprintln(os.Stderr, "No <article> element in ", filename)
-		os.Exit(-1)
+		return fmt.Errorf("no <article> element in %s", filename)
 	}
 	title := util.LookupTitle(doc)
 
-	util.CreateDirIfNotExist(*outfilePath)
-	if len(*outfileName) > 0 {
-		outFile = filepath.Join(*outfilePath, *outfileName)
+	ofile, err := createOutputFile(*outfilePath, *outfileName, title)
+	if err != nil {
+		return err
+	}
+	shrinkDocument(doc)
+	err = html.Render(ofile, doc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createOutputFile(outPath, outName, title string) (*os.File, error) {
+	var outFile string
+	util.CreateDirIfNotExist(outPath)
+	if len(outName) > 0 {
+		outFile = filepath.Join(*outfilePath, outName)
 	} else {
 		outFile = filepath.Join(*outfilePath, title+".html")
 	}
 	fmt.Printf("writing %s...\n", outFile)
 	ofile, err := os.Create(outFile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(-1)
+		return nil, err
 	}
-	shrinkDocument(doc)
-	err = html.Render(ofile, doc)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(-1)
-	}
+	return ofile, nil
 }
 
 func shrinkDocument(rootNode *html.Node) {
