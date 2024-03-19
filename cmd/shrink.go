@@ -34,6 +34,7 @@ import (
 var (
 	outfileName *string
 	outfilePath *string
+	globPattern *string
 )
 
 // shrinkCmd represents the shrink command
@@ -45,43 +46,59 @@ In many cases references to other articles and other kind of overhead can be fou
 These artifacts may consume much more memory and disk space than the article.  
 Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var outFile string
 
-		if len(args) != 1 {
-			fmt.Println("filename missing")
-			os.Exit(-1)
-		}
-		filename := args[0]
-		fmt.Println("shrink called for " + filename)
-		file := util.OpenFile(filename)
-		defer func() { _ = file.Close() }()
+		if isGlobMode() {
+			files, err := filepath.Glob(*globPattern)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			fmt.Printf("files to process: %+v\n----------\n", files)
+			for _, filename := range files {
+				processFile(filename)
+			}
 
-		doc := util.ParseHTML(file)
-		if !util.HasArticleElement(doc) {
-			fmt.Fprintln(os.Stderr, "No <article> element in ", filename)
-			os.Exit(-1)
-		}
-		title := util.LookupTitle(doc)
-		fmt.Printf("Title: %+v\n", title)
-
-		util.CreateDirIfNotExist(*outfilePath)
-		if len(*outfileName) > 0 {
-			outFile = filepath.Join(*outfilePath, *outfileName)
 		} else {
-			outFile = filepath.Join(*outfilePath, title+".html")
-		}
-		ofile, err := os.Create(outFile)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(-1)
-		}
-		shrinkDocument(doc)
-		err = html.Render(ofile, doc)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(-1)
+			if len(args) != 1 {
+				fmt.Println("filename missing")
+				os.Exit(-1)
+			}
+			filename := args[0]
+			processFile(filename)
 		}
 	},
+}
+
+func processFile(filename string) {
+	var outFile string
+	fmt.Printf("shrinking %s...\n", filename)
+	file := util.OpenFile(filename)
+	defer func() { _ = file.Close() }()
+
+	doc := util.ParseHTML(file)
+	if !util.HasArticleElement(doc) {
+		fmt.Fprintln(os.Stderr, "No <article> element in ", filename)
+		os.Exit(-1)
+	}
+	title := util.LookupTitle(doc)
+
+	util.CreateDirIfNotExist(*outfilePath)
+	if len(*outfileName) > 0 {
+		outFile = filepath.Join(*outfilePath, *outfileName)
+	} else {
+		outFile = filepath.Join(*outfilePath, title+".html")
+	}
+	fmt.Printf("writing %s...\n", outFile)
+	ofile, err := os.Create(outFile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(-1)
+	}
+	shrinkDocument(doc)
+	err = html.Render(ofile, doc)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(-1)
+	}
 }
 
 func shrinkDocument(rootNode *html.Node) {
@@ -118,9 +135,14 @@ func shrinkDocument(rootNode *html.Node) {
 	lookupArticle(body)
 }
 
+func isGlobMode() bool {
+	return len(*globPattern) > 0
+}
+
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
 	outfileName = shrinkCmd.PersistentFlags().String("outfile", "", "The name of the output file.")
 	outfilePath = shrinkCmd.PersistentFlags().String("outpath", "./", "The path where the output file shall be written.")
+	globPattern = shrinkCmd.PersistentFlags().String("glob", "", "The pattern used for input file selection. Put the pattern in \"\" to prevent expansion of wildcards.")
 }

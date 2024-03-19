@@ -13,14 +13,3 @@ If the target file name shall be given via the command line the `--outfile` para
 $ shrinkr --outpath /path/to/put/the/created/file --outfile myTarget.txt theSourceToShrink.html
 ````
 
-
-
-
-# Tasks
-
-- [ ] fix verbose 
-- [x] how to handle output file?
-- [ ] implement option to process a set of input files, e.g. some kind of glob
-- [x] handle non-existing target folder
-- [ ] drop also siblings in front of the article tag.
-
