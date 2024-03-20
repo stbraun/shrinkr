@@ -63,8 +63,7 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 				os.Exit(1)
 			}
 			filename := args[0]
-			err := processFile(filename)
-			if err != nil {
+			if err := processFile(filename); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}

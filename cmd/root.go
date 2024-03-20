@@ -38,11 +38,10 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "shrinkr",
 	Short: "Shrink files clipped from Medium.",
-	Long: `Files clipped from Medium may contain massive appendices 
-referencing other articles. As a consequence the file sizes of such clippings
-can get a multiple of the article size itself.
-Shrinkr looks for an <article> element and tries to remove all 
-sections in branches parallel to the <article>.`,
+	Long: `Files clipped from Medium tend to be quite big.
+The file size is caused by massive appendices referencing other articles.
+Shrinkr looks for an HTML element of type <article> and tries to remove all 
+its siblings`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
