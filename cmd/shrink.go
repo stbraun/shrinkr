@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/stbraun/shrinkr/util"
@@ -103,7 +104,8 @@ func createOutputFile(outPath, outName, title string) (*os.File, error) {
 	if len(outName) > 0 {
 		outFile = filepath.Join(*outfilePath, outName)
 	} else {
-		outFile = filepath.Join(*outfilePath, title+".html")
+		shortenedTitle := shortenTitle(title)
+		outFile = filepath.Join(*outfilePath, shortenedTitle+".html")
 	}
 	fmt.Printf("writing %s...\n", outFile)
 	ofile, err := os.Create(outFile)
@@ -111,6 +113,13 @@ func createOutputFile(outPath, outName, title string) (*os.File, error) {
 		return nil, err
 	}
 	return ofile, nil
+}
+
+// Cut off trailing meta data and spurious sentences from given title.
+func shortenTitle(title string) string {
+	shortenedTitle, _, _ := strings.Cut(title, " |")        // cut off meta data
+	shortenedTitle, _, _ = strings.Cut(shortenedTitle, ".") // cut off following sentence(s)
+	return shortenedTitle
 }
 
 func shrinkDocument(rootNode *html.Node) {
