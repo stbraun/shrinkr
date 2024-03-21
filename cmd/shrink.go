@@ -36,6 +36,7 @@ var (
 	outfileName string
 	outfilePath string
 	globPattern string
+	stats       *util.Stats
 )
 
 // shrinkCmd represents the shrink command
@@ -47,7 +48,7 @@ In many cases references to other articles and other kind of overhead can be fou
 These artifacts may consume much more memory and disk space than the article.  
 Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		stats = util.NewStats()
 		if isGlobMode() {
 			files, err := filepath.Glob(globPattern)
 			if err != nil {
@@ -68,6 +69,12 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 				os.Exit(1)
 			}
 		}
+		fmt.Printf("\n----------\nStatistics\n----------\n")
+		fmt.Printf("%d articles were processed reducing the cumulated size by %s from %s to %s\n",
+			stats.Count(),
+			util.FormatFileSize(stats.SizeReducedBy()),
+			util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
+			util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
 	},
 }
 
@@ -85,33 +92,35 @@ func processFile(filename string) error {
 	}
 	title := util.LookupTitle(doc)
 
-	ofile, err := createOutputFile(outfilePath, outfileName, title)
+	ofile, ofileName, err := createOutputFile(outfilePath, outfileName, title)
 	if err != nil {
 		return err
 	}
+
 	shrinkDocument(doc)
 	err = html.Render(ofile, doc)
 	if err != nil {
 		return err
 	}
+	stats.AddSizes(util.GetFileSize(filename), util.GetFileSize(ofileName))
 	return nil
 }
 
-func createOutputFile(outPath, outName, title string) (*os.File, error) {
-	var outFile string
+func createOutputFile(outPath, outName, title string) (*os.File, string, error) {
+	var ofileName string
 	util.CreateDirIfNotExist(outPath)
 	if len(outName) > 0 {
-		outFile = filepath.Join(outfilePath, outName)
+		ofileName = filepath.Join(outfilePath, outName)
 	} else {
 		shortenedTitle := shortenTitle(title)
-		outFile = filepath.Join(outfilePath, shortenedTitle+".html")
+		ofileName = filepath.Join(outfilePath, shortenedTitle+".html")
 	}
-	fmt.Printf("writing %s...\n", outFile)
-	ofile, err := os.Create(outFile)
+	fmt.Printf("writing %s...\n", ofileName)
+	ofile, err := os.Create(ofileName)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return ofile, nil
+	return ofile, ofileName, nil
 }
 
 // Cut off trailing meta data and spurious sentences from given title.
