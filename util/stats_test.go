@@ -120,7 +120,7 @@ func Test_formatFileSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := formatFileSize(tt.args.size); got != tt.want {
+			if got := FormatFileSize(tt.args.size); got != tt.want {
 				t.Errorf("formatFileSize() = %v, want %v", got, tt.want)
 			}
 		})

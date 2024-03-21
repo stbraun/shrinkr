@@ -24,12 +24,15 @@ package util
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 type Stats struct {
 	count int
 	iSize int64
 	oSize int64
+	start time.Time
+	stop  time.Time
 }
 
 func NewStats() *Stats {
@@ -64,6 +67,22 @@ func (s *Stats) CumulatedSizesOfOriginalFiles() int64 {
 // Returns the cumulated sizes of the shrinked files.
 func (s *Stats) CumulatedSizesOfShrinkedFiles() int64 {
 	return s.oSize
+}
+
+// Start time measurement.
+func (s *Stats) Start() {
+	s.start = time.Now()
+}
+
+// Stop time measurement
+func (s *Stats) Stop() {
+	s.stop = time.Now()
+}
+
+// Retrieve the elapsed time.
+func (s *Stats) ElapsedTime() int64 {
+	dur := s.stop.Sub(s.start)
+	return dur.Milliseconds()
 }
 
 func GetFileSize(name string) int64 {

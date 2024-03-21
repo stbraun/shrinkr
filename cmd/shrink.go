@@ -49,6 +49,7 @@ These artifacts may consume much more memory and disk space than the article.
 Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		stats = util.NewStats()
+		stats.Start()
 		if isGlobMode() {
 			files, err := filepath.Glob(globPattern)
 			if err != nil {
@@ -69,9 +70,11 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 				os.Exit(1)
 			}
 		}
+		stats.Stop()
 		fmt.Printf("\n----------\nStatistics\n----------\n")
-		fmt.Printf("%d articles were processed reducing the cumulated size by %s from %s to %s\n",
+		fmt.Printf("%d articles were processed in %dms reducing the cumulated size by %s from %s to %s\n",
 			stats.Count(),
+			stats.ElapsedTime(),
 			util.FormatFileSize(stats.SizeReducedBy()),
 			util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
 			util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
