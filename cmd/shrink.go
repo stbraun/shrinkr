@@ -33,9 +33,9 @@ import (
 )
 
 var (
-	outfileName *string
-	outfilePath *string
-	globPattern *string
+	outfileName string
+	outfilePath string
+	globPattern string
 )
 
 // shrinkCmd represents the shrink command
@@ -49,7 +49,7 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if isGlobMode() {
-			files, err := filepath.Glob(*globPattern)
+			files, err := filepath.Glob(globPattern)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			}
@@ -85,7 +85,7 @@ func processFile(filename string) error {
 	}
 	title := util.LookupTitle(doc)
 
-	ofile, err := createOutputFile(*outfilePath, *outfileName, title)
+	ofile, err := createOutputFile(outfilePath, outfileName, title)
 	if err != nil {
 		return err
 	}
@@ -101,10 +101,10 @@ func createOutputFile(outPath, outName, title string) (*os.File, error) {
 	var outFile string
 	util.CreateDirIfNotExist(outPath)
 	if len(outName) > 0 {
-		outFile = filepath.Join(*outfilePath, outName)
+		outFile = filepath.Join(outfilePath, outName)
 	} else {
 		shortenedTitle := shortenTitle(title)
-		outFile = filepath.Join(*outfilePath, shortenedTitle+".html")
+		outFile = filepath.Join(outfilePath, shortenedTitle+".html")
 	}
 	fmt.Printf("writing %s...\n", outFile)
 	ofile, err := os.Create(outFile)
@@ -156,13 +156,13 @@ func shrinkDocument(rootNode *html.Node) {
 }
 
 func isGlobMode() bool {
-	return len(*globPattern) > 0
+	return len(globPattern) > 0
 }
 
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
-	outfileName = shrinkCmd.PersistentFlags().String("outfile", "", "The name of the output file.")
-	outfilePath = shrinkCmd.PersistentFlags().String("outpath", "./", "The path where the output file shall be written.")
-	globPattern = shrinkCmd.PersistentFlags().String("glob", "", "The pattern used for input file selection. Put the pattern in \"\" to prevent expansion of wildcards.")
+	shrinkCmd.PersistentFlags().StringVar(&outfileName, "outfile", "", "The name of the output file.")
+	shrinkCmd.PersistentFlags().StringVar(&outfilePath, "outpath", "./", "The path where the output file shall be written.")
+	shrinkCmd.PersistentFlags().StringVar(&globPattern, "glob", "", "The pattern used for input file selection. Put the pattern in \"\" to prevent expansion of wildcards.")
 }
