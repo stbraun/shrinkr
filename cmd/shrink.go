@@ -56,7 +56,9 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			}
-			fmt.Printf("files to process: %+v\n----------\n", files)
+			if Verbose {
+				listFilesToProcess(files)
+			}
 			for _, filename := range files {
 				processFile(filename)
 			}
@@ -73,15 +75,28 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 		}
 		stats.Stop()
 		if !doNotReportStats {
-			fmt.Printf("\n----------\nStatistics\n----------\n")
-			fmt.Printf("%d articles were processed in %dms reducing the cumulated size by %s from %s to %s\n",
-				stats.Count(),
-				stats.ElapsedTime(),
-				util.FormatFileSize(stats.SizeReducedBy()),
-				util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
-				util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
+			reportStatistics(*stats)
 		}
 	},
+}
+
+func listFilesToProcess(files []string) {
+	fmt.Printf("\n----------------\n%d files to process\n----------------\n", len(files))
+	for _, fn := range files {
+		fmt.Printf("\t%s\n", fn)
+	}
+	fmt.Println("----------------")
+}
+
+func reportStatistics(stats util.Stats) {
+	fmt.Printf("\n----------\nStatistics\n----------\n")
+	fmt.Printf("%d articles were processed in %dms\nreducing the cumulated size by %s from %s to %s\n",
+		stats.Count(),
+		stats.ElapsedTime(),
+		util.FormatFileSize(stats.SizeReducedBy()),
+		util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
+		util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
+	fmt.Println("----------")
 }
 
 func processFile(filename string) error {
@@ -157,10 +172,6 @@ func shrinkDocument(rootNode *html.Node) {
 		}
 		for _, r := range nodesToBeRemoved {
 			p := r.Parent
-			if Verbose {
-				fmt.Printf("parent: %+v\n", p)
-				fmt.Printf("child: %+v\n", r)
-			}
 			if p != nil {
 				p.RemoveChild(r)
 			}
