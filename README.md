@@ -11,5 +11,9 @@ $ shrinkr --outpath /path/to/put/the/created/file theSourceToShrink.html
 If the target file name shall be given via the command line the `--outfile` parameter can be used.
 ``` sh
 $ shrinkr --outpath /path/to/put/the/created/file --outfile myTarget.txt theSourceToShrink.html
-````
+```
 
+Query the version number with:
+``` sh
+$ shrinkr --version
+```
