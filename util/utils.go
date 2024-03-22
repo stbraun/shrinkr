@@ -105,15 +105,18 @@ func LookupTitle(rootNode *html.Node) string {
 }
 
 // Determines the siblings of the given node.
-// Currently, only next siblings are considered.
 func ListSiblingsOfNode(n *html.Node) []*html.Node {
 	var l []*html.Node
-	s := n.NextSibling
+	s := n.PrevSibling
+	for s != nil {
+		l = append(l, s)
+		s = s.PrevSibling
+	}
+	s = n.NextSibling
 	for s != nil {
 		l = append(l, s)
 		s = s.NextSibling
 	}
-	// TODO add also previous siblings if any.
 	return l
 }
 
