@@ -33,10 +33,11 @@ import (
 )
 
 var (
-	outfileName string
-	outfilePath string
-	globPattern string
-	stats       *util.Stats
+	outfileName      string
+	outfilePath      string
+	globPattern      string
+	stats            *util.Stats
+	doNotReportStats bool
 )
 
 // shrinkCmd represents the shrink command
@@ -71,13 +72,15 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			}
 		}
 		stats.Stop()
-		fmt.Printf("\n----------\nStatistics\n----------\n")
-		fmt.Printf("%d articles were processed in %dms reducing the cumulated size by %s from %s to %s\n",
-			stats.Count(),
-			stats.ElapsedTime(),
-			util.FormatFileSize(stats.SizeReducedBy()),
-			util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
-			util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
+		if !doNotReportStats {
+			fmt.Printf("\n----------\nStatistics\n----------\n")
+			fmt.Printf("%d articles were processed in %dms reducing the cumulated size by %s from %s to %s\n",
+				stats.Count(),
+				stats.ElapsedTime(),
+				util.FormatFileSize(stats.SizeReducedBy()),
+				util.FormatFileSize(stats.CumulatedSizesOfOriginalFiles()),
+				util.FormatFileSize(stats.CumulatedSizesOfShrinkedFiles()))
+		}
 	},
 }
 
@@ -177,4 +180,5 @@ func init() {
 	shrinkCmd.PersistentFlags().StringVar(&outfileName, "outfile", "", "The name of the output file.")
 	shrinkCmd.PersistentFlags().StringVar(&outfilePath, "outpath", "./", "The path where the output file shall be written.")
 	shrinkCmd.PersistentFlags().StringVar(&globPattern, "glob", "", "The pattern used for input file selection. Put the pattern in \"\" to prevent expansion of wildcards.")
+	shrinkCmd.PersistentFlags().BoolVar(&doNotReportStats, "nostats", false, "Suppress reporting of statistics.")
 }

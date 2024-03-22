@@ -58,9 +58,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.shrinkr.yaml)")
-
 	rootCmd.PersistentFlags().BoolVar(&Verbose, "verbose", false, "Provide more information.")
-	fmt.Printf("Verbose(root): %+v\n", Verbose)
 }
 
 // initConfig reads in config file and ENV variables if set.
