@@ -33,15 +33,12 @@ import (
 
 // existsCmd represents the exists command
 var existsCmd = &cobra.Command{
-	Use:   "exists",
+	Use:   "exists <filename>",
 	Short: "Looks for an element of type article in a given document.",
 	Long: `The command checks for the existence of an element of type article in a given HTML document.
 It can be run on documents to decide whether shrinking them may work.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			fmt.Fprintln(os.Stderr, "filename missing")
-			os.Exit(1)
-		}
 		filename := args[0]
 		if viper.GetBool("verbose") {
 			fmt.Println("exists called for " + filename)

@@ -35,43 +35,31 @@ import (
 var (
 	outfileName      string
 	outfilePath      string
-	globPattern      string
 	stats            *util.Stats
 	doNotReportStats bool
 )
 
 // shrinkCmd represents the shrink command
 var shrinkCmd = &cobra.Command{
-	Use:   "shrink",
+	Use:   "shrink <filename or glob pattern>",
 	Short: "Looks for a block of text below the article and removes it.",
 	Long: `The command checks for the existence of text below the article and removes it. 
 In many cases references to other articles and other kind of overhead can be found here. 
 These artifacts may consume much more memory and disk space than the article.  
 Removing them can therefore shrink the size of the file quite a bit.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		stats = util.NewStats()
 		stats.Start()
-		if isGlobMode() {
-			files, err := filepath.Glob(globPattern)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-			}
-			if Verbose {
-				listFilesToProcess(files)
-			}
-			for _, filename := range files {
-				processFile(filename)
-			}
-		} else {
-			if len(args) != 1 {
-				fmt.Println("filename missing")
-				os.Exit(1)
-			}
-			filename := args[0]
-			if err := processFile(filename); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
+		files, err := filepath.Glob(args[0])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		if Verbose {
+			listFilesToProcess(files)
+		}
+		for _, filename := range files {
+			processFile(filename)
 		}
 		stats.Stop()
 		if !doNotReportStats {
@@ -181,15 +169,10 @@ func shrinkDocument(rootNode *html.Node) {
 	lookupArticle(body)
 }
 
-func isGlobMode() bool {
-	return len(globPattern) > 0
-}
-
 func init() {
 	rootCmd.AddCommand(shrinkCmd)
 
 	shrinkCmd.PersistentFlags().StringVar(&outfileName, "outfile", "", "The name of the output file.")
 	shrinkCmd.PersistentFlags().StringVar(&outfilePath, "outpath", "./", "The path where the output file shall be written.")
-	shrinkCmd.PersistentFlags().StringVar(&globPattern, "glob", "", "The pattern used for input file selection. Put the pattern in \"\" to prevent expansion of wildcards.")
 	shrinkCmd.PersistentFlags().BoolVar(&doNotReportStats, "nostats", false, "Suppress reporting of statistics.")
 }
