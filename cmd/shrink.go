@@ -59,7 +59,9 @@ Removing them can therefore shrink the size of the file quite a bit.`,
 			listFilesToProcess(files)
 		}
 		for _, filename := range files {
-			processFile(filename)
+			if err = processFile(filename); err != nil {
+				fmt.Fprintf(os.Stderr, "Processing %s failed with %s.", filename, err)
+			}
 		}
 		stats.Stop()
 		if !doNotReportStats {
@@ -94,7 +96,7 @@ func processFile(filename string) error {
 
 	doc, err := html.Parse(file)
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing HTML failed: %w", err)
 	}
 	if !util.HasArticleElement(doc) {
 		return fmt.Errorf("no <article> element in %s", filename)
@@ -103,13 +105,13 @@ func processFile(filename string) error {
 
 	ofile, ofileName, err := createOutputFile(outfilePath, outfileName, title)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating the output file failed: %w", err)
 	}
 
 	shrinkDocument(doc)
 	err = html.Render(ofile, doc)
 	if err != nil {
-		return err
+		return fmt.Errorf("rendering HTML failed: %w", err)
 	}
 	stats.AddSizes(util.GetFileSize(filename), util.GetFileSize(ofileName))
 	return nil
@@ -127,7 +129,7 @@ func createOutputFile(outPath, outName, title string) (*os.File, string, error) 
 	fmt.Printf("writing %s...\n", ofileName)
 	ofile, err := os.Create(ofileName)
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("create target file failed: %w", err)
 	}
 	return ofile, ofileName, nil
 }
