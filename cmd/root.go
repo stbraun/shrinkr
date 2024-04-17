@@ -43,7 +43,7 @@ The file size is caused by massive appendices referencing other articles.
 Shrinkr looks for an HTML element of type <article> and tries to remove all 
 its siblings`,
 	Args:    cobra.NoArgs,
-	Version: "0.2.1",
+	Version: "0.2.2",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

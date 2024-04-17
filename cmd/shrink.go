@@ -123,7 +123,7 @@ func createOutputFile(outPath, outName, title string) (*os.File, string, error) 
 	if len(outName) > 0 {
 		ofileName = filepath.Join(outfilePath, outName)
 	} else {
-		shortenedTitle := shortenTitle(title)
+		shortenedTitle := sanitizeFilename(shortenTitle(title))
 		ofileName = filepath.Join(outfilePath, shortenedTitle+".html")
 	}
 	fmt.Printf("writing %s...\n", ofileName)
@@ -141,6 +141,14 @@ func shortenTitle(title string) string {
 	return shortenedTitle
 }
 
+func sanitizeFilename(name string) string {
+	var replacements = map[string]string{"/": "_", ":": " -"}
+	sanitized := name
+	for orig, repl := range replacements {
+		sanitized = strings.ReplaceAll(sanitized, orig, repl)
+	}
+	return sanitized
+}
 func shrinkDocument(rootNode *html.Node) {
 	body := util.LookupBody(rootNode)
 	var result bool = false
