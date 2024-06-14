@@ -90,7 +90,7 @@ func reportStatistics(stats util.Stats) {
 }
 
 func processFile(filename string) error {
-	fmt.Printf("shrinking %s...\n", filename)
+	fmt.Fprintf(os.Stderr, "shrinking %s...\n", filename)
 	file := util.OpenFile(filename)
 	defer func() { _ = file.Close() }()
 
@@ -126,7 +126,7 @@ func createOutputFile(outPath, outName, title string) (*os.File, string, error) 
 		shortenedTitle := sanitizeFilename(shortenTitle(title))
 		ofileName = filepath.Join(outfilePath, shortenedTitle+".html")
 	}
-	fmt.Printf("writing %s...\n", ofileName)
+	fmt.Fprintf(os.Stderr, "writing %s...\n", ofileName)
 	ofile, err := os.Create(ofileName)
 	if err != nil {
 		return nil, "", fmt.Errorf("create target file failed: %w", err)
