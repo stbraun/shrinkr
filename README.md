@@ -17,3 +17,8 @@ Query the version number with:
 ``` sh
 $ shrinkr --version
 ```
+
+## Integration with DEVONthink
+The integration with DEVONthink is implemented via the AppleScript file `Shrink.scpt`. Copy it into DEVONthink's script folder. 
+
+To shrink a document select it in DEVONthink and run the script on it (Menu scripts/Shrink). It will shrink the document, import it into DEVONthink and delete the original document.

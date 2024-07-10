@@ -89,6 +89,7 @@ func reportStatistics(stats util.Stats) {
 	fmt.Println("----------")
 }
 
+// Shrink the given file and write to output file.
 func processFile(filename string) error {
 	fmt.Fprintf(os.Stderr, "shrinking %s...\n", filename)
 	file := util.OpenFile(filename)
@@ -117,6 +118,7 @@ func processFile(filename string) error {
 	return nil
 }
 
+// Determine the name of the output file if not given and create the file.
 func createOutputFile(outPath, outName, title string) (*os.File, string, error) {
 	var ofileName string
 	util.CreateDirIfNotExist(outPath)
@@ -136,11 +138,12 @@ func createOutputFile(outPath, outName, title string) (*os.File, string, error) 
 
 // Cut off trailing meta data and spurious sentences from given title.
 func shortenTitle(title string) string {
-	shortenedTitle, _, _ := strings.Cut(title, " |")        // cut off meta data
-	shortenedTitle, _, _ = strings.Cut(shortenedTitle, ".") // cut off following sentence(s)
+	shortenedTitle, _, _ := strings.Cut(title, " |")         // cut off meta data
+	shortenedTitle, _, _ = strings.Cut(shortenedTitle, ". ") // cut off following sentence(s)
 	return shortenedTitle
 }
 
+// Replace invalid characterrs in file name.
 func sanitizeFilename(name string) string {
 	var replacements = map[string]string{"/": "_", ":": " -"}
 	sanitized := name
@@ -149,6 +152,8 @@ func sanitizeFilename(name string) string {
 	}
 	return sanitized
 }
+
+// Remove undesired HTML nodes from the document.
 func shrinkDocument(rootNode *html.Node) {
 	body := util.LookupBody(rootNode)
 	var result bool = false
